@@ -754,14 +754,27 @@
     const client   = document.getElementById('clientName').value.trim().replace(/\s+/g,'_') || 'Client';
     const filename = `${invNum}_${client}.pdf`;
 
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     const noPrint = document.querySelectorAll('.no-print');
     noPrint.forEach(el => el.style.setProperty('display','none','important'));
 
     const el = document.getElementById('invoice-preview');
     const logoImg = el.querySelector('.inv-logo-img');
 
-    // Matikan mix-blend-mode sementara saat generate PDF untuk mencegah gambar tembus
+    // Matikan mix-blend-mode sementara saat generate PDF
     if (logoImg) logoImg.style.mixBlendMode = 'normal';
+
+    // FIX MOBILE: paksa lebar invoice ke A4 agar PDF tidak terpotong
+    const A4_PX = 794; // ~210mm pada 96dpi
+    const prevWidth   = el.style.width;
+    const prevMinWidth = el.style.minWidth;
+    const prevFontSize = el.style.fontSize;
+    if (isMobile) {
+      el.style.width    = A4_PX + 'px';
+      el.style.minWidth = A4_PX + 'px';
+      el.style.fontSize = '13px';
+    }
 
     // Trik swap div statis untuk menangani bug text-clipping html2canvas
     const inputs = el.querySelectorAll('.item-input');
@@ -770,7 +783,7 @@
       div.className = input.className; 
       div.style.whiteSpace = 'pre-wrap'; 
       div.style.wordBreak = 'break-word';
-      div.textContent = input.value; 
+      div.textContent = input.value || input.placeholder || '';
       div.setAttribute('data-pdf-temp', 'true');
       
       input.parentNode.insertBefore(div, input);
@@ -778,17 +791,25 @@
       input.style.setProperty('display', 'none', 'important');
     });
 
+    // Tunggu layout selesai di-reflow
     await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 100));
 
     try {
+      // FIX MOBILE: scale lebih rendah di mobile agar tidak OOM/crash
+      const scale = isMobile ? 1.5 : 2;
+
       const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true, // WAJIB TRUE untuk render gambar url dummy
+        scale,
+        useCORS: true,
+        allowTaint: false,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        width: isMobile ? A4_PX : undefined,
+        windowWidth: isMobile ? A4_PX : undefined,
       });
 
-      const imgData  = canvas.toDataURL('image/jpeg', 0.98);
+      const imgData  = canvas.toDataURL('image/jpeg', 0.95);
       const A4_W_MM  = 210;
       const pdfH_MM  = (canvas.height / canvas.width) * A4_W_MM;
 
@@ -800,12 +821,45 @@
       });
 
       doc.addImage(imgData, 'JPEG', 0, 0, A4_W_MM, pdfH_MM);
-      doc.save(filename);
+
+      if (isMobile) {
+        // FIX MOBILE: doc.save() sering diblokir di iOS/Android
+        // Gunakan blob URL + buka di tab baru agar bisa di-share/download
+        const pdfBlob = doc.output('blob');
+        const blobUrl = URL.createObjectURL(pdfBlob);
+
+        // Coba buka di tab baru (Android Chrome biasanya langsung download)
+        const newTab = window.open(blobUrl, '_blank');
+
+        // Fallback jika popup diblokir: buat link sementara & klik
+        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+          const a = document.createElement('a');
+          a.href     = blobUrl;
+          a.download = filename;
+          a.target   = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        // Bersihkan blob URL setelah 60 detik
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      } else {
+        doc.save(filename);
+      }
+
     } catch(err) {
       alert('Gagal export PDF: ' + err.message);
     } finally {
+      // Kembalikan style invoice
+      if (isMobile) {
+        el.style.width    = prevWidth;
+        el.style.minWidth = prevMinWidth;
+        el.style.fontSize = prevFontSize;
+      }
+
       noPrint.forEach(el => el.style.removeProperty('display'));
-      if (logoImg) logoImg.style.mixBlendMode = 'multiply'; // Kembalikan efek setelah PDF dirender
+      if (logoImg) logoImg.style.mixBlendMode = 'multiply';
       
       const tempDivs = el.querySelectorAll('div[data-pdf-temp="true"]');
       tempDivs.forEach(div => {
