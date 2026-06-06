@@ -316,10 +316,6 @@
     
     /* Ubah grid meta menjadi vertikal */
     .inv-meta { grid-template-columns: 1fr; gap: 24px; }
-    .inv-meta > div:last-child { text-align: left; }
-    
-    .inv-meta-field { justify-content: flex-start; gap: 16px; border-bottom: none; padding: 4px 0; display: grid; grid-template-columns: 120px 1fr; text-align: left; }
-    .inv-meta-field .val { text-align: left; }
 
     /* Bungkus tabel dengan overflow agar bisa di-scroll horizontal tanpa merusak layout */
     .inv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
@@ -334,9 +330,11 @@
     /* App Header */
     .app-header { flex-direction: column; align-items: flex-start; gap: 16px; }
     
-    /* Invoice Header */
-    .inv-header { flex-direction: column; gap: 20px; }
-    .inv-title-block { text-align: left; }
+    /* Invoice Header - Dibuat agar tetap sejajar (kiri & kanan) */
+    .inv-header { flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .inv-title-block { text-align: right; }
+    .inv-title { font-size: 26px; } /* Ukuran font diperkecil sedikit agar teks tidak menabrak logo di layar HP */
+    .inv-logo-img { max-width: 140px; } /* Batas lebar logo menyesuaikan sisa ruang */
     
     /* Balance Banner */
     .inv-balance-banner { flex-direction: column; align-items: flex-start; gap: 16px; }
