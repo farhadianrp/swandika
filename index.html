@@ -281,10 +281,29 @@
      RESPONSIVE BREAKPOINTS 
      ========================================================================== */
 
-  /* Tablet & iPad Portrait */
+/* Tablet & iPad Portrait */
   @media (max-width: 820px) {
-    .editor-wrap { grid-template-columns: 1fr; }
-    .sidebar { position: static; }
+    /* 1. Ubah display menjadi flex untuk memanipulasi urutan */
+    .editor-wrap { 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    /* 2. Pindahkan kertas Invoice ke urutan pertama (paling atas) */
+    .invoice-shell {
+      order: 1;
+      width: 100%;
+      margin-bottom: 24px; /* Tambahkan jarak antara kertas invoice dan form di bawahnya */
+    }
+
+    /* 3. Pindahkan Sidebar (Form) ke urutan kedua (bawah) */
+    .sidebar { 
+      order: 2;
+      position: static; 
+      width: 100%;
+    }
+
+    /* Penyesuaian layout mobile yang sudah ada sebelumnya */
     .inv-totals { flex-direction: column; align-items: stretch; gap: 24px; }
     .inv-editable-note { max-width: 100%; }
     .inv-footer { grid-template-columns: 1fr; }
