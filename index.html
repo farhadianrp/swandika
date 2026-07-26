@@ -1,783 +1,1443 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Invoice Generator by Swandika Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Swandika Studio — Professional Graphic Design Studio</title>
+    <meta name="description" content="Swandika Studio helps businesses, startups, and personal brands present themselves more professionally through visual design that is compelling, strategic, and production-ready for both digital and print media.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Geist:wght@200;300;400&display=swap" rel="stylesheet">
 
-  :root {
-    --blue: #3800D1;
-    --blue-dark: #290099;
-    --blue-light: #F0EBFF;
-    --blue-mid: #C2ADFF;
-    --black: #0A0A0A;
-    --gray-900: #111827;
-    --gray-700: #374151;
-    --gray-50: #6B7280;
-    --gray-300: #D1D5DB;
-    --gray-200: #E5E7EB;
-    --gray-100: #F3F4F6;
-    --gray-50: #F9FAFB;
-    --white: #FFFFFF;
-    --red: #DC2626;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
-    --shadow-lg: 0 4px 6px rgba(0,0,0,.04), 0 20px 40px rgba(0,0,0,.10);
-  }
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: #EEF0F5;
-    min-height: 100vh;
-    color: var(--gray-900);
-    padding: 24px 16px 60px;
-  }
+    <style>
+        /* =========================================
+           DESIGN SYSTEM
+           ========================================= */
+        :root {
+            --bg-main: #FFFFFF;
+            --bg-dark: #0B0B0C;
+            --bg-soft: #F3F3F1;
+            --text-main: #0B0B0C;
+            --text-inverse: #FFFFFF;
+            --text-muted: #6B6B70;
+            --text-muted-dark: #8A8A91;
+            --accent: #FF5A1F;
+            --accent-gradient: linear-gradient(135deg, #FF6A00 0%, #FF3D00 100%);
+            --border-light: #E3E3E0;
+            --border-dark: #232326;
 
-  /* APP SHELL */
-  .app-header {
-    max-width: 1040px;
-    margin: 0 auto 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .app-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--gray-900);
-    letter-spacing: -.4px;
-  }
-  .app-title span { color: var(--blue); }
+            /* Primer: Sora. Sekunder: Geist — keduanya dari Google Fonts.
+               Geist dipakai pada 3 bobot: 200 Extra Light, 300 Light, 400 Regular. */
+            --font-display: 'Sora', sans-serif;
+            --font-body: 'Geist', sans-serif;
+            --w-extralight: 200;
+            --w-light: 300;
+            --w-regular: 400;
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 10px 20px; border-radius: 8px; font-size: 13.5px;
-    font-weight: 500; cursor: pointer; border: none; font-family: 'Inter', sans-serif;
-    transition: all .18s ease; line-height: 1;
-  }
-  .btn-primary { background: var(--blue); color: #fff; }
-  .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(56, 0, 209, 0.35); }
-  .btn-outline { background: #fff; color: var(--gray-700); border: 1px solid var(--gray-300); }
-  .btn-outline:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
-  .btn-sm { padding: 7px 14px; font-size: 12.5px; }
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
 
-  /* EDITOR LAYOUT */
-  .editor-wrap {
-    max-width: 1040px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 272px 1fr;
-    gap: 20px;
-    align-items: start;
-  }
+            --container: 1280px;
+            --gutter: 40px;
+            --section-padding: 140px;
+        }
 
-  /* SIDEBAR */
-  .sidebar { position: sticky; top: 24px; }
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .card-title {
-    font-size: 10px; font-weight: 700; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--blue); margin-bottom: 14px;
-  }
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 11.5px; font-weight: 500; color: var(--gray-500); margin-bottom: 5px; }
-  .field input {
-    width: 100%; padding: 8px 11px; border-radius: 7px;
-    border: 1px solid var(--gray-300); font-size: 13px; font-family: 'Inter', sans-serif;
-    color: var(--gray-900); background: var(--gray-50);
-    transition: border .15s, box-shadow .15s; outline: none;
-  }
-  .field input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(56, 0, 209, 0.12); }
-  .field input[readonly] { background: var(--gray-100); color: var(--gray-500); cursor: default; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  .action-btns { display: flex; flex-direction: column; gap: 10px; }
-  .action-btns .btn { justify-content: center; }
-  .hint {
-    font-size: 11px; color: var(--gray-500);
-    background: var(--gray-50); border-radius: 7px;
-    padding: 10px 12px; line-height: 1.6; border: 1px solid var(--gray-200);
-    margin-top: 4px;
-  }
+        html.lenis, html.lenis body { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
 
-  /* INVOICE PREVIEW SHELL */
-  .invoice-shell {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-  }
+        html, body { width: 100%; overflow-x: hidden; }
+        body {
+            font-family: var(--font-body);
+            font-weight: var(--w-light);
+            background: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
 
-  /* INVOICE CONTENT */
-  #invoice-preview {
-    background: #fff;
-    padding: 52px 56px 48px;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--black);
-  }
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.05; letter-spacing: -0.03em; }
+        a { text-decoration: none; color: inherit; transition: all 0.3s ease; }
+        ul { list-style: none; }
+        img { max-width: 100%; display: block; object-fit: cover; }
+        input { font-family: inherit; }
 
-  /* Header */
-  .inv-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 40px; padding-bottom: 32px;
-    border-bottom: 2px solid var(--blue);
-  }
-  .inv-logo-area { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-  .inv-logo-img { 
-    height: 35px; 
-    width: auto; 
-    max-width: 300px;
-    object-fit: contain; 
-    mix-blend-mode: multiply; /* Trik agar JPG putih transparan */
-  }
-  .inv-brand-tagline { font-size: 11px; color: var(--gray-500); margin-top: 2px; font-weight: 400; }
-  .inv-brand-tagline2 { font-size: 11px; color: var(--gray-500); margin-top: 3px; font-weight: 400; letter-spacing:.04em; }
-  
-  .inv-title-block { text-align: right; }
-  .inv-title { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 800; color: var(--blue); letter-spacing: -1.5px; line-height: 1; }
-  .inv-number { font-size: 12px; color: var(--gray-500); margin-top: 6px; font-weight: 500; letter-spacing: .04em; }
+        .container { width: 100%; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
 
-  /* Meta */
-  .inv-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 36px; }
-  .inv-meta-label { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
-  .inv-meta-field { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
-  .inv-meta-field:last-child { border-bottom: none; }
-  .inv-meta-field .key { color: var(--gray-500); font-weight: 400; }
-  .inv-meta-field .val { font-weight: 600; color: var(--gray-900); text-align: right; }
-  .inv-client-name { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
-  .inv-client-contact { font-size: 12px; color: var(--gray-500); font-weight: 400; }
-  .inv-brand-contact { font-size: 11.5px; color: var(--gray-500); line-height: 1.7; font-weight: 400; }
+        .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1); }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .hover-target { cursor: none !important; }
 
-  /* Table */
-  .inv-table-wrap { margin-bottom: 28px; }
-  .inv-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  .inv-table thead tr { background: var(--blue); }
-  .inv-table thead th {
-    padding: 11px 14px; text-align: left;
-    font-size: 10.5px; font-weight: 600; letter-spacing: .07em;
-    text-transform: uppercase; color: #fff;
-  }
-  .inv-table thead th.col-qty,
-  .inv-table thead th.col-price { text-align: center; }
-  .inv-table thead th.col-sub { text-align: right; }
+        /* =========================================
+           BUTTONS
+           ========================================= */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 15px 30px; border-radius: 100px; font-family: var(--font-body);
+            font-weight: var(--w-regular); font-size: 0.95rem; cursor: pointer; border: none;
+            transition: all 0.3s ease; white-space: nowrap;
+        }
+        .btn-accent { background: var(--accent-gradient); color: #FFF; box-shadow: 0 4px 18px rgba(255,90,31,0.32); }
+        .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,90,31,0.42); }
+        .btn-light { background: #FFFFFF; color: var(--text-main); }
+        .btn-light:hover { transform: translateY(-2px); }
+        .btn-ghost-light { background: transparent; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.35); }
+        .btn-ghost-light:hover { background: rgba(255,255,255,0.1); border-color: #FFF; }
+        .btn-ghost-dark { background: transparent; color: var(--text-main); border: 1px solid var(--border-light); }
+        .btn-ghost-dark:hover { border-color: var(--text-main); }
 
-  .inv-table tbody tr { border-bottom: 1px solid var(--gray-100); }
-  .inv-table tbody tr:hover { background: var(--gray-50); }
-  .inv-table tbody td {
-    padding: 10px 14px; vertical-align: top;
-  }
-  .inv-table tbody td.col-qty { text-align: center; vertical-align: middle; }
-  .inv-table tbody td.col-price { text-align: center; vertical-align: middle; }
-  .inv-table tbody td.col-sub { text-align: right; font-weight: 600; font-size: 13px; vertical-align: middle; }
-  .inv-table tbody td.col-actions { width: 36px; padding: 0 6px; vertical-align: middle; }
+        /* =========================================
+           SECTION HEADERS — rata kiri + eyebrow bernomor
+           ========================================= */
+        .eyebrow {
+            display: inline-flex; align-items: center; gap: 10px;
+            font-size: 0.75rem; font-weight: var(--w-regular); text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--text-muted); margin-bottom: 28px;
+        }
+        .eyebrow-num {
+            width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+            color: #FFF; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: var(--w-regular); letter-spacing: 0;
+        }
+        .on-dark .eyebrow { color: var(--text-muted-dark); }
 
-  /* Inline inputs */
-  .item-input {
-    background: transparent; border: none; outline: none;
-    font-family: 'Inter', sans-serif; font-size: 13px; color: var(--gray-900);
-    width: 100%; padding: 3px 0;
-    border-bottom: 1px dashed transparent;
-    transition: border-color .15s;
-    display: block;
-  }
-  
-  textarea.item-input {
-    resize: none;
-    overflow: hidden;
-    line-height: 1.4;
-  }
+        .section-head { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: end; margin-bottom: 72px; }
+        .section-head h2 { font-size: clamp(2.2rem, 4.4vw, 3.4rem); }
+        .section-head .head-note { color: var(--text-muted); font-size: 1.02rem; font-weight: var(--w-extralight); max-width: 400px; justify-self: end; }
+        .on-dark .section-head .head-note { color: var(--text-muted-dark); }
 
-  .item-input:hover { border-bottom-color: var(--gray-300); }
-  .item-input:focus { border-bottom-color: var(--blue); }
-  .item-input.sub-desc {
-    font-size: 11.5px; color: var(--gray-500); font-weight: 400; margin-top: 4px;
-  }
-  .item-input.inp-qty { text-align: center; }
-  .item-input.inp-price { text-align: right; }
+        .link-arrow { display: inline-flex; align-items: center; gap: 8px; font-weight: var(--w-regular); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid currentColor; padding-bottom: 5px; }
+        .link-arrow:hover { color: var(--accent); }
 
-  .item-name-label {
-    font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--gray-400); margin-bottom: 2px; display: none;
-  }
+        /* =========================================
+           HEADER — floating pill nav
+           ========================================= */
+        header {
+            position: fixed; top: 20px; left: 0; width: 100%; z-index: 900;
+            transition: top 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        /* Di hero: transparan tanpa border, teks putih — menyatu dengan foto gelap.
+           Setelah scroll: latar putih ter-blur, teks & logo berbalik jadi gelap. */
+        .nav-pill {
+            max-width: var(--container); margin: 0 auto; display: flex; align-items: center;
+            justify-content: space-between; gap: 24px;
+            background: transparent; border: 1px solid transparent; border-radius: 100px;
+            padding: 10px 10px 10px 26px;
+            transition: background 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease;
+        }
+        header.scrolled .nav-pill {
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-color: var(--border-light);
+        }
+        header.menu-open .nav-pill { background: transparent; border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
 
-  .add-row-btn {
-    display: flex; align-items: center; gap: 6px; padding: 8px 14px;
-    border-radius: 6px; background: var(--blue-light); color: var(--blue);
-    border: 1px dashed var(--blue-mid); cursor: pointer;
-    font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif;
-    margin-top: 8px; transition: all .15s;
-  }
-  .add-row-btn:hover { background: #E0E7FF; }
+        .logo-wrapper { display: inline-flex; align-items: center; position: relative; z-index: 901; }
+        .site-logo-img { height: 20px; width: auto; object-fit: contain; transition: opacity 0.4s ease; }
+        .logo-dark { position: absolute; top: 50%; left: 0; transform: translateY(-50%); opacity: 0; }
+        header.scrolled .logo-light { opacity: 0; }
+        header.scrolled .logo-dark { opacity: 1; }
+        header.menu-open .logo-light { opacity: 1; }
+        header.menu-open .logo-dark { opacity: 0; }
 
-  .row-del-btn {
-    background: transparent; border: none; cursor: pointer;
-    color: var(--gray-300); padding: 6px; border-radius: 5px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .row-del-btn:hover { color: var(--red); background: #FEF2F2; }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { font-size: 0.9rem; font-weight: var(--w-regular); color: rgba(255,255,255,0.72); position: relative; padding-bottom: 3px; transition: color 0.4s ease; }
+        .nav-links a:hover { color: #FFF; }
+        header.scrolled .nav-links a { color: var(--text-muted); }
+        header.scrolled .nav-links a:hover { color: var(--text-main); }
+        .nav-links a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1.5px; background: var(--accent); transition: width 0.3s ease; }
+        .nav-links a:hover::after { width: 100%; }
 
-  /* Totals & Notes Section */
-  .inv-totals { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; gap: 24px; }
-  .inv-editable-note { flex-grow: 1; max-width: 50%; text-align: left; }
-  .inv-totals-table { width: 300px; flex-shrink: 0; }
-  .totals-row {
-    display: flex; justify-content: space-between;
-    padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--gray-100);
-  }
-  .totals-row:last-child { border-bottom: none; }
-  .totals-row .t-label { color: var(--gray-500); font-weight: 400; }
-  .totals-row .t-val { font-weight: 500; text-align: right; }
-  .totals-row.highlight {
-    background: var(--blue-light); border-radius: 8px;
-    padding: 12px 14px; margin-top: 8px; border: none;
-  }
-  .totals-row.highlight .t-label { color: var(--blue); font-weight: 700; font-size: 13.5px; }
-  .totals-row.highlight .t-val { color: var(--blue); font-weight: 700; font-size: 16px; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+        .nav-actions .btn { padding: 12px 24px; font-size: 0.88rem; }
 
-  /* Balance banner */
-  .inv-balance-banner {
-    background: var(--blue); border-radius: 10px;
-    padding: 18px 24px; margin-bottom: 36px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .inv-balance-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,.7); }
-  .inv-balance-amount { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -1px; }
-  .inv-due-info { text-align: right; }
-  .inv-due-label { font-size: 11px; color: rgba(255,255,255,.6); }
-  .inv-due-date { font-size: 15px; font-weight: 600; color: #fff; }
+        .menu-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 6px; width: 44px; height: 44px; background: transparent; border: none; cursor: pointer; }
+        .menu-toggle span { display: block; width: 20px; height: 2px; background: #FFF; transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), background 0.4s ease; }
+        header.scrolled .menu-toggle span { background: var(--text-main); }
+        header.menu-open .menu-toggle span { background: #FFF; }
+        .menu-toggle.active span:nth-child(1) { transform: translateY(4px) rotate(45deg); }
+        .menu-toggle.active span:nth-child(2) { transform: translateY(-4px) rotate(-45deg); }
 
-  /* Shared Label & Text */
-  .inv-section-label { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
-  .inv-section-text { font-size: 11.5px; color: var(--gray-500); line-height: 1.7; font-weight: 400; }
-  .inv-section-text strong { color: var(--gray-700); font-weight: 600; }
-  .inv-section-text li { margin-left: 14px; margin-bottom: 4px; }
+        .mobile-menu-overlay {
+            position: fixed; inset: 0; height: 100dvh; background: rgba(11,11,12,0.98); z-index: 890;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .mobile-menu-overlay.active { opacity: 1; pointer-events: auto; }
+        .mobile-nav-links { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+        .mobile-nav-links a {
+            font-family: var(--font-display); font-size: 2.4rem; font-weight: 600; color: #FFF;
+            transform: translateY(24px); opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease, color 0.3s ease;
+        }
+        .mobile-nav-links a:hover { color: var(--accent); }
+        .mobile-menu-overlay.active .mobile-nav-links a { transform: translateY(0); opacity: 1; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(1) { transition-delay: 0.08s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(2) { transition-delay: 0.13s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(3) { transition-delay: 0.18s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(4) { transition-delay: 0.23s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(5) { transition-delay: 0.28s; }
 
-  /* Footer Layout */
-  .inv-footer { border-top: 1px solid var(--gray-200); padding-top: 28px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
-  .footer-right-col { display: flex; flex-direction: column; gap: 24px; }
+        /* =========================================
+           HERO — gelap, full-bleed, rata kiri
+           ========================================= */
+        .hero {
+            position: relative; min-height: 100vh; background: var(--bg-dark);
+            color: var(--text-inverse); display: flex; align-items: stretch; overflow: hidden;
+        }
+        .hero-bg { position: absolute; inset: 0; z-index: 0; }
+        .hero-bg img { width: 100%; height: 100%; filter: grayscale(35%) contrast(1.1); }
+        .hero-bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(11,11,12,0.86) 0%, rgba(11,11,12,0.62) 45%, rgba(11,11,12,0.94) 100%);
+        }
+        .hero-inner {
+            position: relative; z-index: 2; width: 100%; max-width: var(--container); margin: 0 auto;
+            padding: 150px var(--gutter) 60px; display: flex; flex-direction: column; justify-content: center;
+        }
 
-  /* Column widths */
-  .col-desc  { width: 42%; }
-  .col-qty   { width: 11%; }
-  .col-price { width: 22%; }
-  .col-sub   { width: 19%; }
-  .col-act   { width: 6%; }
+        .hero-main { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 56px; align-items: end; }
+        /* Batas bawah 2.3rem: cukup besar agar jelas mendominasi subheadline (1.05rem),
+           tapi masih menjaga "Makes Your Brand" muat 1 baris di layar 375px. */
+        .hero-main h1 { font-size: clamp(2.3rem, 6vw, 4.9rem); }
+        .hero-side { padding-bottom: 8px; }
+        .hero-side p { color: rgba(255,255,255,0.78); font-size: 1.05rem; font-weight: var(--w-extralight); margin-bottom: 28px; max-width: 42ch; }
+        .hero-btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
 
-  /* ==========================================================================
-     RESPONSIVE BREAKPOINTS 
-     ========================================================================== */
+        /* =========================================
+           MARQUEE CLIENTS
+           ========================================= */
+        .marquee-section { padding: 60px 0 56px; border-bottom: 1px solid var(--border-light); overflow: hidden; background: var(--bg-main); width: 100%; }
+        .marquee-label { text-align: center; font-size: 0.72rem; font-weight: var(--w-regular); letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 26px; padding: 0 var(--gutter); }
+        /* Jarak antar logo dibuat tetap (gap), bukan space-around yang lebarnya
+           ikut berubah-ubah mengikuti layar sehingga terasa mepet di layar sempit.
+           6 salinan digeser -16.6667% (tepat 1 track) agar loop mulus di layar lebar. */
+        .marquee-container { display: flex; width: max-content; animation: scroll 34s linear infinite; }
+        .marquee-track { display: flex; align-items: center; gap: 90px; padding-right: 90px; }
+        .marquee-logo { height: 32px; opacity: 0.38; filter: grayscale(100%); transition: all 0.3s ease; flex-shrink: 0; }
+        .marquee-logo:hover { opacity: 1; filter: grayscale(0%); }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-16.6667%); } }
 
-  /* Tablet & iPad Portrait */
-  @media (max-width: 820px) {
-    body:not(.pdf-export) .editor-wrap { 
-      display: flex; 
-      flex-direction: column; 
-    }
-    
-    body:not(.pdf-export) .invoice-shell {
-      order: 1;
-      width: 100%;
-      margin-bottom: 24px; 
-    }
+        /* =========================================
+           STATEMENT SECTION
+           ========================================= */
+        .statement { padding: var(--section-padding) 0 100px; }
+        .statement h2 { font-size: clamp(1.9rem, 4.2vw, 3.3rem); max-width: 20ch; line-height: 1.14; }
+        .statement h2 .muted { color: #BDBDBC; }
+        .statement-foot { margin-top: 44px; }
 
-    body:not(.pdf-export) .sidebar { 
-      order: 2;
-      position: static; 
-      width: 100%;
-    }
+        /* =========================================
+           IMAGE STRIP — full bleed
+           ========================================= */
+        /* Marquee gliding — dua baris identik, geser -50% agar loop mulus.
+           Efek sama seperti hero gallery mobile di V1. */
+        /* PENTING — 4 salinan baris, digeser -25% (tepat selebar 1 baris) tiap siklus.
+           Dengan 2 salinan + geser -50%, loop hanya mulus bila lebar 1 baris >= lebar layar;
+           di layar lebar akan muncul ruang kosong di akhir siklus. 4 salinan membuat sisa
+           konten selalu menutupi layar hingga ~3x lebar baris (>6000px). */
+        .image-strip { width: 100%; overflow: hidden; }
+        .strip-marquee { display: flex; width: max-content; animation: stripGlide 32s linear infinite; will-change: transform; }
+        .strip-row { display: flex; gap: 10px; padding-right: 10px; }
+        .strip-row figure { position: relative; width: 440px; height: 530px; flex-shrink: 0; border-radius: var(--radius-md); overflow: hidden; background: #16161A; }
+        .strip-row img { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+        .strip-row figure:hover img { transform: scale(1.06); }
+        @keyframes stripGlide { 0% { transform: translateX(0); } 100% { transform: translateX(-25%); } }
 
-    body:not(.pdf-export) .inv-totals { flex-direction: column; align-items: stretch; gap: 24px; }
-    body:not(.pdf-export) .inv-editable-note { max-width: 100%; }
-    body:not(.pdf-export) .inv-footer { grid-template-columns: 1fr; }
-  }
+        /* =========================================
+           STATS — baris inline
+           ========================================= */
+        .stats-section { padding: 100px 0 var(--section-padding); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: 1px solid var(--border-light); padding-top: 44px; }
+        .stat-num { font-family: var(--font-display); font-size: clamp(2.4rem, 4.5vw, 3.4rem); font-weight: 700; line-height: 1; margin-bottom: 14px; }
+        .stat-num .plus { color: var(--accent); }
+        .stat-label { font-weight: var(--w-regular); font-size: 0.98rem; margin-bottom: 7px; }
+        .stat-desc { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; max-width: 30ch; }
 
-  /* Large Mobile & Tablet */
-  @media (max-width: 768px) {
-    body:not(.pdf-export) #invoice-preview { padding: 32px 24px 24px; }
-    body:not(.pdf-export) .inv-meta { grid-template-columns: 1fr; gap: 24px; }
-    body:not(.pdf-export) .inv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
-    body:not(.pdf-export) .inv-table { min-width: 600px; }
-    body:not(.pdf-export) .inv-totals-table { width: 100%; }
-  }
+        /* =========================================
+           SERVICES — 7 baris besar bernomor (dark)
+           ========================================= */
+        .services-section { background: var(--bg-dark); color: var(--text-inverse); padding: var(--section-padding) 0; }
+        /* Daftar kiri + panel preview kanan yang berubah saat hover */
+        .services-body { position: relative; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 72px; align-items: start; }
 
-  /* Small Mobile */
-  @media (max-width: 576px) {
-    body:not(.pdf-export) .app-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-    body:not(.pdf-export) .inv-header { flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    body:not(.pdf-export) .inv-title-block { text-align: right; }
-    body:not(.pdf-export) .inv-title { font-size: 26px; } 
-    body:not(.pdf-export) .inv-logo-img { max-width: 140px; } 
-    body:not(.pdf-export) .inv-balance-banner { flex-direction: column; align-items: flex-start; gap: 16px; }
-    body:not(.pdf-export) .inv-due-info { text-align: left; }
-  }
-</style>
+        .service-row {
+            display: block; padding: 26px 0; border-top: 1px solid var(--border-dark); cursor: pointer;
+            transition: padding-left 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.3s ease;
+        }
+        .service-row:last-child { border-bottom: 1px solid var(--border-dark); }
+        .service-row:hover, .service-row.is-active { padding-left: 16px; border-top-color: var(--accent); border-top-style: dashed; }
+        .service-row.is-active + .service-row { border-top-color: var(--accent); border-top-style: dashed; }
+        .service-row.is-active:last-child { border-bottom-color: var(--accent); border-bottom-style: dashed; }
+        .service-name { font-family: var(--font-display); font-size: clamp(1.7rem, 3.6vw, 2.9rem); font-weight: 600; letter-spacing: -0.03em; display: flex; align-items: flex-start; gap: 10px; transition: color 0.3s ease; }
+        .service-row.is-active .service-name { color: var(--accent); }
+        .service-name sup { font-family: var(--font-body); font-size: 0.72rem; font-weight: var(--w-regular); color: var(--text-muted-dark); letter-spacing: 0; top: 0.2em; }
+        /* Deskripsi tetap ada di HTML (dibaca JS + terindeks mesin pencari), tapi tidak dirender di daftar.
+           Selektor anak langsung (>) — TANPA ini, aturan juga menyembunyikan <p> deskripsi
+           di dalam .service-drop sehingga dropdown mobile hanya menampilkan gambar. */
+        .service-row > p { display: none; }
+
+        /* Dropdown mobile — pengganti panel hover yang tidak bisa dipakai tanpa kursor.
+           Disembunyikan di desktop, ditampilkan lewat media query di bawah. */
+        .service-drop { display: none; max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(0.16,1,0.3,1); }
+        .service-drop-inner { padding: 22px 0 6px; }
+        .service-drop-img { width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius-md); overflow: hidden; background: #16161A; margin-bottom: 16px; }
+        .service-drop-img img { width: 100%; height: 100%; }
+        .service-drop-desc { display: block; font-size: 0.95rem; font-weight: var(--w-extralight); color: rgba(255,255,255,0.9); line-height: 1.6; }
+
+        /* Preview mengikuti posisi vertikal baris yang di-hover, bukan diam di satu tempat.
+           Hanya tampil saat ada baris yang benar-benar di-hover. */
+        .service-preview {
+            position: absolute; top: 0; right: 0; width: 330px; pointer-events: none;
+            opacity: 0; transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        .service-preview.is-visible { opacity: 1; }
+        .preview-img { position: relative; width: 100%; padding-top: 100%; border-radius: var(--radius-md); overflow: hidden; background: #16161A; margin-bottom: 18px; }
+        .preview-img img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s ease; }
+        .preview-img img.is-shown { opacity: 1; }
+        .preview-name { font-size: 0.9rem; color: var(--text-muted-dark); margin-bottom: 10px; }
+        .preview-desc { font-size: 0.96rem; font-weight: var(--w-extralight); color: rgba(255,255,255,0.92); line-height: 1.6; }
+        .preview-text { transition: opacity 0.3s ease; }
+        .preview-text.is-fading { opacity: 0; }
+
+        /* =========================================
+           PORTFOLIO — layout dipertahankan dari versi lama
+           ========================================= */
+        .projects-section { padding: var(--section-padding) 0; position: relative; }
+        .projects-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 64px 40px; }
+        .project-card { display: flex; flex-direction: column; }
+        .project-image-wrapper { position: relative; width: 100%; padding-top: 70%; border-radius: var(--radius-lg); overflow: hidden; background: #111; }
+        .project-image-wrapper img { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); }
+        .project-image-wrapper:hover img { transform: scale(1.05); }
+        .project-info { padding: 24px 0 0; }
+        .project-title { font-size: 1.7rem; margin-bottom: 16px; }
+        .project-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .project-client { font-size: 0.84rem; color: var(--text-muted); font-weight: var(--w-regular); }
+        .project-meta-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .project-year { font-size: 0.84rem; color: var(--text-muted); }
+        .project-categories { display: flex; gap: 8px; flex-wrap: wrap; }
+        .project-category-pill { border: 1px solid var(--border-light); border-radius: 100px; padding: 4px 15px; font-size: 0.73rem; font-weight: var(--w-regular); background: #FFF; }
+        .project-desc { color: var(--text-muted); font-size: 0.94rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        #custom-cursor { position: fixed; top: 0; left: 0; width: 80px; height: 80px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFF; font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%) scale(0); opacity: 0; transition: transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.2s ease; }
+        #custom-cursor.active { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+
+        /* =========================================
+           WHY CHOOSE US
+           ========================================= */
+        .why-section { padding: var(--section-padding) 0; background: var(--bg-soft); }
+        .why-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+        .why-num { font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 18px; }
+        .why-item h3 { font-size: 1.12rem; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #DCDCD8; }
+        .why-item p { color: var(--text-muted); font-size: 0.93rem; }
+
+        /* =========================================
+           FAQ
+           ========================================= */
+        .faq-section { padding: var(--section-padding) 0; }
+        .faq-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 72px; align-items: start; }
+        .faq-intro h2 { font-size: clamp(2rem, 3.8vw, 2.9rem); margin-bottom: 20px; }
+        .faq-intro p { color: var(--text-muted); font-size: 0.98rem; max-width: 34ch; margin-bottom: 32px; }
+        .faq-item { border-bottom: 1px solid var(--border-light); }
+        .faq-item:first-child { border-top: 1px solid var(--border-light); }
+        .faq-question { width: 100%; text-align: left; padding: 26px 0; background: none; border: none; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--text-main); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .faq-icon { font-size: 1.4rem; font-weight: 400; transition: transform 0.3s ease; flex-shrink: 0; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+        .faq-answer-inner { padding-bottom: 26px; color: var(--text-muted); line-height: 1.75; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); color: var(--accent); }
+
+        /* =========================================
+           TESTIMONIALS — dark
+           ========================================= */
+        .testimonials { background: var(--bg-dark); color: var(--text-inverse); padding: var(--section-padding) 0; }
+        .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .testimonial-card { background: #141417; border: 1px solid var(--border-dark); border-radius: var(--radius-md); padding: 34px 30px; display: flex; flex-direction: column; transition: all 0.3s ease; }
+        .testimonial-card:hover { transform: translateY(-5px); border-color: rgba(255,90,31,0.5); }
+        .testi-stars { display: flex; gap: 4px; margin-bottom: 22px; }
+        .testi-stars svg { width: 16px; height: 16px; fill: var(--accent); }
+        .testimonial-text { font-size: 1rem; color: rgba(255,255,255,0.9); margin-bottom: 30px; line-height: 1.7; }
+        .author-info-row { display: flex; align-items: center; gap: 14px; margin-top: auto; }
+        .author-info-row img { width: 44px; height: 44px; border-radius: 50%; }
+        .author-details h4 { font-size: 0.95rem; margin-bottom: 2px; }
+        .author-details span { font-size: 0.82rem; color: var(--text-muted-dark); }
+
+        /* Kontrol carousel — hanya dipakai di mobile */
+        .testi-controls { display: none; justify-content: space-between; align-items: center; margin-top: 28px; }
+        .testi-dots { display: flex; gap: 8px; }
+        .testi-dot { width: 8px; height: 8px; border-radius: 50%; background: #3A3A40; border: none; padding: 0; cursor: pointer; transition: background 0.3s ease, width 0.3s ease; }
+        .testi-dot.is-active { background: #FFFFFF; width: 22px; border-radius: 4px; }
+        .testi-arrows { display: flex; gap: 10px; }
+        .testi-arrow {
+            width: 42px; height: 42px; border-radius: 50%; background: transparent;
+            border: 1px solid var(--border-dark); color: var(--text-inverse);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease;
+        }
+        .testi-arrow svg { width: 17px; height: 17px; }
+        .testi-arrow:hover { background: var(--text-inverse); color: var(--bg-dark); }
+        .testi-arrow:disabled { opacity: 0.35; cursor: default; }
+        .testi-arrow:disabled:hover { background: transparent; color: var(--text-inverse); }
+
+        /* =========================================
+           FINAL CTA
+           ========================================= */
+        .cta-section { padding: var(--section-padding) 0; text-align: center; }
+        .cta-section .eyebrow { margin-bottom: 30px; }
+        /* Satu baris di desktop — max-width dilepas agar tidak dipaksa membungkus */
+        .cta-section h2 { font-size: clamp(2rem, 6vw, 4.4rem); margin: 0 auto 24px; }
+        .cta-section p { color: var(--text-muted); font-size: 1.1rem; font-weight: var(--w-extralight); max-width: 56ch; margin: 0 auto 44px; }
+        .cta-btn-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+        /* =========================================
+           FOOTER — besar, newsletter + wordmark raksasa
+           ========================================= */
+        footer { background: var(--bg-dark); color: var(--text-muted-dark); padding: 84px 0 32px; overflow: hidden; }
+        /* Newsletter di kiri, 3 kolom link di kanan — satu baris, seperti referensi */
+        .footer-main { display: grid; grid-template-columns: 1.9fr 1fr 1fr; gap: 56px; align-items: start; padding-bottom: 52px; border-bottom: 1px solid var(--border-dark); }
+        .footer-news h3 { color: var(--text-inverse); font-size: 1.5rem; margin-bottom: 14px; max-width: 18ch; }
+        .footer-news p { font-size: 0.92rem; max-width: 38ch; margin-bottom: 22px; }
+        .news-form { display: flex; gap: 10px; margin-bottom: 24px; max-width: 420px; }
+        .news-form input {
+            flex: 1; background: #141417; border: 1px solid var(--border-dark); border-radius: 100px;
+            padding: 14px 22px; color: #FFF; font-size: 0.92rem; outline: none; transition: border-color 0.3s ease;
+        }
+        .news-form input::placeholder { color: #5E5E66; }
+        .news-form input:focus { border-color: var(--accent); }
+        .footer-social { display: flex; gap: 10px; }
+        .social-icon { width: 38px; height: 38px; border: 1px solid var(--border-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-inverse); transition: all 0.3s ease; }
+        .social-icon svg { width: 15px; height: 15px; fill: currentColor; }
+        .social-icon:hover { background: var(--text-inverse); color: var(--bg-dark); }
+
+        /* Tanpa judul kolom — hanya daftar link polos, seperti referensi.
+           Font primer & ukuran disamakan dengan h3 "Stay updated with us" agar sama menonjol. */
+        .footer-col li { margin-bottom: 14px; }
+        .footer-col a {
+            font-family: var(--font-display); font-size: 1.5rem; font-weight: 600;
+            letter-spacing: -0.03em; line-height: 1.15; display: inline-block;
+        }
+        .footer-col a:hover { color: var(--text-inverse); }
+
+        /* Wordmark mengisi penuh lebar container tanpa JS sama sekali.
+           Container query unit (cqw) menskala relatif terhadap lebar .wordmark-wrap,
+           jadi otomatis benar di semua lebar layar dan tetap akurat walau .container
+           berhenti melebar di max-width. Tidak bergantung pada event resize apa pun.
+           Angka 10.43 = 100 / 9.532 (rasio lebar teks Sora 700, tracking -0.045em) dikali
+           faktor aman 0.995. Ukur ulang rasio ini jika font display atau teksnya diganti. */
+        .wordmark-wrap { container-type: inline-size; }
+        .footer-wordmark {
+            font-family: var(--font-display); font-weight: 700; color: var(--text-inverse);
+            font-size: clamp(1.4rem, 9.1vw, 7.7rem); /* fallback bila cqw tak didukung */
+            line-height: 0.92; letter-spacing: -0.045em;
+            text-align: center; white-space: nowrap; padding: 20px 0 34px; user-select: none;
+        }
+        @supports (font-size: 1cqw) {
+            .footer-wordmark { font-size: 10.43cqw; }
+        }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 0.84rem; border-top: 1px solid var(--border-dark); padding-top: 28px; }
+        .footer-bottom-links { display: flex; gap: 24px; }
+        .footer-bottom-links a:hover { color: var(--text-inverse); }
+
+        /* =========================================
+           BACK TO TOP
+           ========================================= */
+        #back-to-top {
+            position: fixed; bottom: 30px; right: 30px; width: 52px; height: 52px; border-radius: 50%;
+            background: var(--text-main); color: var(--bg-main); border: none; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; z-index: 880;
+            opacity: 0; visibility: hidden; transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        #back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+        #back-to-top:hover { background: var(--accent); }
+        #back-to-top svg { width: 22px; height: 22px; }
+
+        /* =========================================
+           MODAL
+           ========================================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.86); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 40px 24px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: var(--bg-main); width: 100%; max-width: 1000px; max-height: 90vh; border-radius: var(--radius-lg); position: relative; transform: translateY(20px); transition: transform 0.3s ease; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: #FFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; z-index: 10; color: var(--text-main); transition: all 0.2s; padding: 0; }
+        .modal-close svg { width: 21px; height: 21px; }
+        .modal-close:hover { background: var(--accent); color: #FFF; transform: scale(1.05); }
+        .modal-scroll-area { overflow-y: auto; width: 100%; height: 100%; padding-bottom: 40px; overscroll-behavior: contain; scrollbar-width: none; }
+        .modal-scroll-area::-webkit-scrollbar { display: none; }
+        .modal-header-img { width: 100%; height: 460px; background: #111; }
+        .modal-header-img img { width: 100%; height: 100%; }
+        .modal-info { padding: 40px 56px; }
+        .modal-info h2 { font-size: 2.3rem; margin-bottom: 22px; }
+        .modal-info p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 22px; }
+        .modal-gallery { display: flex; flex-direction: column; gap: 22px; margin-top: 36px; }
+        .modal-gallery img { width: 100%; border-radius: var(--radius-md); }
+        .modal-details-section { margin-top: 38px; border-top: 1px solid var(--border-light); padding-top: 38px; }
+
+        /* =========================================
+           RESPONSIVE
+           ========================================= */
+        @media (max-width: 1024px) {
+            :root { --section-padding: 100px; --gutter: 32px; }
+            .nav-links { display: none; }
+            .menu-toggle { display: flex; }
+            .nav-pill { padding: 10px 10px 10px 22px; }
+
+            .hero-inner { padding-top: 130px; }
+            /* Tablet & mobile: kolom kanan turun ke bawah headline, tetap rata kiri */
+            .hero-main { grid-template-columns: 1fr; gap: 36px; align-items: start; }
+            .hero-side { padding-bottom: 0; }
+            .strip-row figure { width: 360px; height: 435px; }
+
+            .section-head { grid-template-columns: 1fr; gap: 24px; align-items: start; margin-bottom: 52px; }
+            .section-head .head-note { justify-self: start; max-width: 100%; }
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 40px 32px; }
+            /* Tanpa hover di tablet/mobile — panel preview diganti dropdown di dalam barisnya,
+               agar deskripsi layanan tetap bisa diakses tanpa kursor. */
+            .services-body { grid-template-columns: 1fr; gap: 0; }
+            .service-preview { display: none; }
+            .service-row { cursor: pointer; }
+            .service-row:hover, .service-row.is-active { padding-left: 0; }
+            .service-drop { display: block; }
+
+            .projects-grid { gap: 56px 32px; }
+            .why-grid { grid-template-columns: repeat(2, 1fr); gap: 44px 32px; }
+            .faq-grid { grid-template-columns: 1fr; gap: 44px; }
+            .testimonials-grid { grid-template-columns: 1fr; }
+
+            .footer-main { grid-template-columns: 1fr 1fr; gap: 40px 32px; }
+            .footer-news { grid-column: 1 / -1; }
+        }
+
+        @media (max-width: 768px) {
+            :root { --section-padding: 80px; --gutter: 24px; }
+            header { top: 12px; }
+
+            .hero { min-height: 92vh; }
+            .hero-inner { padding-top: 118px; padding-bottom: 36px; }
+            /* Headline dibuat dominan seperti referensi. <br> dimatikan agar teks
+               membungkus alami dan proporsinya seimbang di layar sempit. */
+            .hero-main h1 { font-size: clamp(2.5rem, 11.5vw, 3.4rem); line-height: 1.08; }
+            .hero-main h1 br { display: none; }
+            .hero-main { gap: 28px; }
+            .hero-side p { font-size: 1.02rem; margin-bottom: 30px; }
+            /* Tombol ditumpuk vertikal, lebar mengikuti isi — bukan direntang penuh */
+            .hero-btn-group { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+            .marquee-section { padding: 44px 0 40px; }
+            .marquee-track { gap: 60px; padding-right: 60px; }
+            .marquee-logo { height: 26px; }
+
+            .statement { padding-bottom: 72px; }
+            /* Efek gliding dipertahankan di mobile */
+            .strip-row figure { width: 310px; height: 375px; }
+
+            .stats-grid { grid-template-columns: 1fr; gap: 36px; }
+            .stat-desc { max-width: 100%; }
+
+            .projects-grid { grid-template-columns: 1fr; gap: 56px; }
+            .why-grid { grid-template-columns: 1fr; gap: 40px; }
+
+            /* Testimonial jadi carousel geser satu-per-satu */
+            .testimonials-grid {
+                display: flex; overflow-x: auto; gap: 16px;
+                scroll-snap-type: x mandatory; scroll-behavior: smooth;
+                scrollbar-width: none; -ms-overflow-style: none;
+            }
+            .testimonials-grid::-webkit-scrollbar { display: none; }
+            .testimonial-card { flex: 0 0 100%; scroll-snap-align: center; }
+            .testi-controls { display: flex; }
+
+            /* Menu footer bersebelahan, huruf lebih tipis, kecil, dan putih */
+            .footer-main { grid-template-columns: 1fr 1fr; gap: 34px 24px; }
+            .footer-news { grid-column: 1 / -1; }
+            .footer-col li { margin-bottom: 11px; }
+            .footer-col a {
+                font-family: var(--font-body); font-weight: var(--w-light);
+                font-size: 0.95rem; letter-spacing: normal; color: #FFFFFF;
+            }
+            .footer-bottom { align-items: center; text-align: center; }
+            .footer-bottom-links { justify-content: center; flex-wrap: wrap; }
+
+            .news-form { flex-direction: column; max-width: 100%; }
+            .news-form .btn { width: 100%; }
+            .footer-bottom { flex-direction: column; gap: 14px; }
+            .footer-wordmark { padding: 12px 0 26px; }
+
+            .modal-overlay { padding: 18px; }
+            .modal-info { padding: 30px 22px; }
+            .modal-info h2 { font-size: 1.85rem; }
+            .modal-header-img { height: 260px; }
+
+            #back-to-top { bottom: 22px; right: 22px; width: 46px; height: 46px; }
+            #custom-cursor { display: none !important; }
+            .hover-target { cursor: pointer !important; }
+        }
+
+        @media (max-width: 480px) {
+            .nav-actions .btn { padding: 10px 17px; font-size: 0.8rem; }
+            .strip-row figure { width: 265px; height: 320px; }
+        }
+    </style>
 </head>
 <body>
 
-<header class="app-header">
-  <div class="app-title">Invoice <span>Generator</span><br>
-  <div class="inv-brand-tagline2">by Swandika Studio</div></div>
-  <div style="display:flex;gap:10px;">
-    <button class="btn btn-outline btn-sm" onclick="resetInvoice()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.33"/></svg>
-      Reset
+    <div id="custom-cursor">View</div>
+
+    <button id="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
     </button>
-    <button class="btn btn-primary" onclick="downloadPDF()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download PDF
-    </button>
-  </div>
-</header>
 
-<div class="editor-wrap">
-
-  <aside class="sidebar">
-    <div class="card">
-      <div class="card-title">Client Info</div>
-      <div class="field">
-        <label>Client Name</label>
-        <input type="text" id="clientName" placeholder="e.g. Budi Santoso" oninput="updatePreview()" />
-      </div>
-      <div class="field">
-        <label>Client Contact</label>
-        <input type="text" id="clientContact" placeholder="email / phone / company" oninput="updatePreview()" />
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Invoice Details</div>
-      <div class="field"><label>Invoice Number</label><input type="text" id="invoiceNum" readonly /></div>
-      <div class="field"><label>Invoice Date</label><input type="text" id="invoiceDate" readonly /></div>
-      <div class="field"><label>Due Date</label><input type="text" id="dueDate" readonly /></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Adjustments</div>
-      <div class="field">
-        <label>Tax (Rp nominal)</label>
-        <input type="number" id="taxAmount" value="0" min="0" step="1000" oninput="calcTotals()" />
-      </div>
-      <div class="field">
-        <label>Discount (%)</label>
-        <input type="number" id="discPercent" value="0" min="0" max="100" step="0.5" oninput="calcTotals()" />
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Actions</div>
-      <div class="action-btns">
-        <button class="btn btn-primary" onclick="downloadPDF()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download PDF
-        </button>
-      </div>
-      <div class="hint" style="margin-top:12px;">
-        Nama file PDF:<br>
-        <strong id="filenameHint" style="color:#374151;word-break:break-all;font-size:10.5px;"></strong>
-      </div>
-    </div>
-  </aside>
-
-  <main class="invoice-shell">
-    <div id="invoice-preview">
-
-      <div class="inv-header">
-        <div class="inv-logo-area">
-          <img src="https://raw.githubusercontent.com/farhadianrp/invoicegenerator/refs/heads/main/swandika%20web%20fix.png" alt="Swandika Studio" class="inv-logo-img" crossorigin="anonymous" />
-          <div class="inv-brand-tagline">Creative &amp; Digital Agency</div>
-        </div>
-        <div class="inv-title-block">
-          <div class="inv-title">INVOICE</div>
-          <div class="inv-number" id="prev-invnum">—</div>
-        </div>
-      </div>
-
-      <div class="inv-meta">
-        <div>
-          <div class="inv-meta-label">Bill To</div>
-          <div class="inv-client-name" id="prev-clientName">—</div>
-          <div class="inv-client-contact" id="prev-clientContact">—</div>
-          <div style="margin-top:20px;">
-            <div class="inv-meta-label">From</div>
-            <div class="inv-brand-contact">
-              Surabaya, Jawa Timur, Indonesia<br>
-              halo@swandikastudio.com · +62 851 5745 7070<br>
-              www.swandikastudio.com
+    <header id="site-header">
+        <div class="container">
+            <div class="nav-pill">
+                <a href="#home" class="logo-wrapper">
+                    <img src="https://raw.githubusercontent.com/farhadianrp/swandika/refs/heads/main/swandika2%20web%20logo%20putih.png" alt="Swandika Studio" class="site-logo-img logo-light">
+                    <img src="https://raw.githubusercontent.com/farhadianrp/swandika/refs/heads/main/swandika2%20web%20logo.png" alt="" aria-hidden="true" class="site-logo-img logo-dark">
+                </a>
+                <nav class="nav-links">
+                    <a href="#home">Home</a>
+                    <a href="#services">Services</a>
+                    <a href="#portfolio">Portfolio</a>
+                    <a href="#about">About</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+                <div class="nav-actions">
+                    <a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20discuss%20a%20design%20project" target="_blank" rel="noopener" class="btn btn-accent">Let's Talk</a>
+                    <button class="menu-toggle" aria-label="Toggle Menu" id="menu-btn"><span></span><span></span></button>
+                </div>
             </div>
-          </div>
         </div>
-        <div style="text-align:right;">
-          <div class="inv-meta-label">Invoice Details</div>
-          <div class="inv-meta-field"><span class="key">Invoice No.</span><span class="val" id="prev-invnum2">—</span></div>
-          <div class="inv-meta-field"><span class="key">Invoice Date</span><span class="val" id="prev-invDate">—</span></div>
-          <div class="inv-meta-field"><span class="key">Payment Due</span><span class="val" id="prev-dueDate">—</span></div>
-          <div class="inv-meta-field"><span class="key">Status</span><span class="val" style="color:var(--blue);">Unpaid</span></div>
-        </div>
-      </div>
+    </header>
 
-      <div class="inv-balance-banner">
-        <div>
-          <div class="inv-balance-label">Balance Due</div>
-          <div class="inv-balance-amount" id="prev-balanceDue">Rp 0</div>
-        </div>
-        <div class="inv-due-info">
-          <div class="inv-due-label">Due Date</div>
-          <div class="inv-due-date" id="prev-dueDate2">—</div>
-        </div>
-      </div>
-
-      <div class="inv-table-wrap">
-        <table class="inv-table">
-          <colgroup>
-            <col class="col-desc" />
-            <col class="col-qty" />
-            <col class="col-price" />
-            <col class="col-sub" />
-            <col class="col-act no-print" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Item / Description</th>
-              <th class="col-qty">Qty</th>
-              <th class="col-price">Unit Price</th>
-              <th class="col-sub">Subtotal</th>
-              <th class="no-print"></th>
-            </tr>
-          </thead>
-          <tbody id="itemsBody"></tbody>
-        </table>
-        <button class="add-row-btn no-print" onclick="addItem()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Item
-        </button>
-      </div>
-
-      <div class="inv-totals">
-        <div class="inv-editable-note">
-          <div class="inv-section-label">Notes / Remarks</div>
-          <textarea id="invoiceNote" class="item-input" rows="2" placeholder="Click to add custom note or instruction here..." style="font-size: 12px; color: var(--gray-500); width: 100%; border-bottom: 1px dashed var(--gray-300);" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-        </div>
-
-        <div class="inv-totals-table">
-          <div class="totals-row"><span class="t-label">Subtotal</span><span class="t-val" id="prev-subtotal">Rp 0</span></div>
-          <div class="totals-row"><span class="t-label">Tax</span><span class="t-val" id="prev-tax">Rp 0</span></div>
-          <div class="totals-row"><span class="t-label">Discount</span><span class="t-val" id="prev-disc">-Rp 0</span></div>
-          <div class="totals-row highlight"><span class="t-label">Total</span><span class="t-val" id="prev-total">Rp 0</span></div>
-        </div>
-      </div>
-
-      <div class="inv-footer">
-        <div>
-          <div class="inv-section-label">Terms &amp; Conditions</div>
-          <ul class="inv-section-text">
-            <li>50% deposit required to start the project. Final files will be delivered upon full payment.</li>
-            <li>Projects below IDR 1,000,000 require full payment upfront.</li>
-            <li>Up to 3 minor revisions included. Additional revisions will be charged separately.</li>
-            <li>Changes outside the approved brief are subject to additional fees.</li>
-            <li>Delivery timelines may vary depending on revisions and client response times.</li>
-            <li>Deposits are non-refundable.</li>
-            <li>Kenne Design Studio reserves the right to display completed work in its portfolio.</li>
-          </ul>
-        </div>
-        <div class="footer-right-col">
-          <div>
-            <div class="inv-section-label">Thank You</div>
-            <div class="inv-section-text">Thank you for trusting Swandika Studio with your project. It's been a pleasure working with you. We look forward to collaborating again soon.</div>
-          </div>
-          <div>
-            <div class="inv-section-label">Payment Method</div>
-            <div class="inv-section-text">
-              <strong>Bank Mandiri</strong><br>
-              Acc No: 1410024242810<br>
-              a.n Farhadian Rosandi Permana<br><br>
-              <strong>PayPal</strong><br>
-              farhadianrp@gmail.com
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div class="mobile-menu-overlay" id="mobile-menu" data-lenis-prevent>
+        <nav class="mobile-nav-links">
+            <a href="#home" class="mobile-link">Home</a>
+            <a href="#services" class="mobile-link">Services</a>
+            <a href="#portfolio" class="mobile-link">Portfolio</a>
+            <a href="#about" class="mobile-link">About</a>
+            <a href="#contact" class="mobile-link">Contact</a>
+        </nav>
     </div>
-  </main>
 
-</div>
+    <main>
+        <!-- ============ HERO ============ -->
+        <section id="home" class="hero">
+            <div class="hero-bg">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000" alt="Swandika Studio at work">
+            </div>
+            <div class="hero-inner">
+                <div class="hero-main">
+                    <h1>Design that <br>Makes Your Brand <br>Stand Out</h1>
+                    <div class="hero-side">
+                        <p>Branding, social media, and print design for businesses, startups, and personal brands that want to be taken seriously.</p>
+                        <div class="hero-btn-group">
+                            <a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20discuss%20a%20design%20project" target="_blank" rel="noopener" class="btn btn-accent">Get Started</a>
+                            <a href="#portfolio" class="btn btn-ghost-light">View Portfolio</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-<script>
-  // ── STATE ──
-  let items = [];
+        <!-- ============ CLIENT LOGOS ============ -->
+        <section class="marquee-section fade-in">
+            <div class="marquee-label">Trusted by businesses &amp; growing brands</div>
+            <div class="marquee-container" id="marquee-container"></div>
+        </section>
 
-  // ── INIT ──
-  function init() {
-    const today    = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const pad      = n => String(n).padStart(2, '0');
-    const dateStr  = d => `${d.getDate()} ${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}`;
-    const yyyymmdd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
-    
-    // Generate 4 digit random number untuk invoice akhir
-    const rand4    = Math.floor(1000 + Math.random() * 9000);
-    const invNum   = `INV-${yyyymmdd(today)}-${rand4}`;
+        <!-- ============ STATEMENT ============ -->
+        <section id="about" class="statement fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">01</span> About the studio</span>
+                <h2>We build visual systems that help brands <span class="muted">look credible, stay consistent, and win attention.</span></h2>
+                <div class="statement-foot">
+                    <a href="#services" class="link-arrow">Explore our services &rarr;</a>
+                </div>
+            </div>
+        </section>
 
-    document.getElementById('invoiceNum').value   = invNum;
-    document.getElementById('invoiceDate').value  = dateStr(today);
-    document.getElementById('dueDate').value      = dateStr(tomorrow);
-    
-    // Sync langsung saat inisialisasi agar nilai muncul
-    document.getElementById('prev-invnum').textContent  = invNum;
-    document.getElementById('prev-invnum2').textContent = invNum;
-    document.getElementById('prev-invDate').textContent = dateStr(today);
-    document.getElementById('prev-dueDate').textContent = dateStr(tomorrow);
-    document.getElementById('prev-dueDate2').textContent= dateStr(tomorrow);
+        <!-- ============ IMAGE STRIP ============ -->
+        <section class="image-strip fade-in">
+            <div class="strip-marquee" id="strip-marquee">
+                <div class="strip-row" id="strip-row">
+                    <figure><img src="https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&q=80&w=700" alt="Design work sample"></figure>
+                    <figure><img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=700" alt="Design work sample"></figure>
+                    <figure><img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=700" alt="Design work sample"></figure>
+                    <figure><img src="https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&q=80&w=700" alt="Design work sample"></figure>
+                    <figure><img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=700" alt="Design work sample"></figure>
+                </div>
+            </div>
+        </section>
 
-    updatePreview();
-    calcTotals();
-  }
+        <!-- ============ STATS ============ -->
+        <section class="stats-section fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">02</span> Numbers</span>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-num"><span class="counter" data-target="200">0</span><span class="plus">+</span></div>
+                        <div class="stat-label">Projects Completed</div>
+                        <p class="stat-desc">Design projects successfully delivered across a wide range of industries.</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num"><span class="counter" data-target="10">0</span><span class="plus">+</span></div>
+                        <div class="stat-label">Design Services</div>
+                        <p class="stat-desc">A broad range of design services covering both digital and print needs.</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num"><span class="counter" data-target="20">0</span><span class="plus">+</span></div>
+                        <div class="stat-label">Business Categories</div>
+                        <p class="stat-desc">Experienced in serving many different types of businesses and sectors.</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num"><span class="counter" data-target="98">0</span><span class="plus">%</span></div>
+                        <div class="stat-label">Client Satisfaction</div>
+                        <p class="stat-desc">The majority of our clients return to work with us on their next project.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  // ── CREATE ROW DOM ──
-  function createRow(item) {
-    const sub = item.qty * item.price;
-    const tr  = document.createElement('tr');
-    tr.dataset.id = item.id;
+        <!-- ============ SERVICES ============ -->
+        <section id="services" class="services-section on-dark fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">03</span> Services</span>
+                <div class="section-head">
+                    <h2>Our Services</h2>
+                    <p class="head-note">Everything your brand needs to look professional, across digital and print.</p>
+                </div>
 
-    tr.innerHTML = `
-      <td class="col-desc">
-        <textarea class="item-input" rows="1"
-          placeholder="Item name (e.g. Design Project)"
-          data-id="${item.id}" data-field="name">${esc(item.name)}</textarea>
-        <textarea class="item-input sub-desc" rows="1"
-          placeholder="Description (e.g. Design Packaging Parfum Varian A)"
-          data-id="${item.id}" data-field="desc">${esc(item.desc)}</textarea>
-      </td>
-      <td class="col-qty">
-        <input class="item-input inp-qty"
-          type="number" min="0" step="1"
-          data-id="${item.id}" data-field="qty"
-          value="${item.qty}" />
-      </td>
-      <td class="col-price">
-        <input class="item-input inp-price"
-          type="number" min="0" step="1000"
-          data-id="${item.id}" data-field="price"
-          value="${item.price}" />
-      </td>
-      <td class="col-sub" data-subtotal="${item.id}">${fmt(sub)}</td>
-      <td class="col-actions no-print">
-        <button class="row-del-btn" data-del="${item.id}" title="Hapus item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14H6L5 6"/>
-            <path d="M10 11v6"/><path d="M14 11v6"/>
-            <path d="M9 6V4h6v2"/>
-          </svg>
-        </button>
-      </td>`;
+                <div class="services-body">
+                    <div class="services-list" id="services-list">
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">Social Media Design <sup>[01]</sup></div>
+                            <p>Content design for Instagram, Facebook, TikTok, LinkedIn, and other platforms, keeping your brand consistent and capturing your audience's attention.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">Branding Identity <sup>[02]</sup></div>
+                            <p>Logo, color palette, typography, brand guidelines, stationery, and the full range of visual identity assets your business needs.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">Book Layout <sup>[03]</sup></div>
+                            <p>Layout for books, company profiles, proposals, e-books, catalogues, annual reports, and other professional documents.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">AI Product Photo <sup>[04]</sup></div>
+                            <p>Photorealistic AI-generated product visuals for promotions, marketplaces, catalogues, and marketing campaigns.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">E-Commerce Banner <sup>[05]</sup></div>
+                            <p>Banners for Shopee, Tokopedia, Lazada, TikTok Shop, websites, and a wide range of digital promotional materials.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">Print Design <sup>[06]</sup></div>
+                            <p>Flyers, banners, posters, restaurant menus, brochures, packaging, X-banners, billboards, and all your print design needs.</p>
+                        </div>
+                        <div class="service-row" data-img="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=700">
+                            <div class="service-name">Custom Design <sup>[07]</sup></div>
+                            <p>Have a specific design requirement in mind? We are ready to build a visual solution tailored to your business.</p>
+                        </div>
+                    </div>
 
-    return tr;
-  }
+                    <aside class="service-preview" id="service-preview" aria-hidden="true">
+                        <div class="preview-img" id="preview-img"></div>
+                        <div class="preview-text" id="preview-text">
+                            <div class="preview-name" id="preview-name"></div>
+                            <p class="preview-desc" id="preview-desc"></p>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
 
-  // ── ADD ITEM ──
-  function addItem(name='', desc='', qty=1, price=0) {
-    const id = `item_${Date.now()}_${Math.floor(Math.random()*9999)}`;
-    const item = { id, name, desc, qty, price };
-    items.push(item);
+        <!-- ============ PORTFOLIO — layout dipertahankan ============ -->
+        <section id="portfolio" class="projects-section fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">04</span> Selected work</span>
+                <div class="section-head">
+                    <h2>Design Work Delivered Across Industries</h2>
+                    <p class="head-note">A selection of recent projects across branding, digital, and print.</p>
+                </div>
+                <div class="projects-grid" id="projects-grid">
+                    <!-- JavaScript renders the project list here -->
+                </div>
+            </div>
+        </section>
 
-    const tbody = document.getElementById('itemsBody');
-    tbody.appendChild(createRow(item));
-    calcTotals();
-  }
+        <!-- ============ WHY CHOOSE US ============ -->
+        <section class="why-section fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">05</span> Why choose us</span>
+                <div class="section-head">
+                    <h2>Why Businesses Choose Swandika Studio</h2>
+                    <p class="head-note">A working process built around clarity, speed, and consistent quality.</p>
+                </div>
+                <div class="why-grid">
+                    <div class="why-item">
+                        <div class="why-num">01</div>
+                        <h3>Creative Solutions</h3>
+                        <p>Every design is built around your specific business needs, never recycled from the same template used for every client.</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-num">02</div>
+                        <h3>Fast Turnaround</h3>
+                        <p>An efficient process backed by clear communication, so your project is delivered on schedule.</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-num">03</div>
+                        <h3>Detail Oriented</h3>
+                        <p>Every element is considered, from layout, typography, and color through to production-ready files.</p>
+                    </div>
+                    <div class="why-item">
+                        <div class="why-num">04</div>
+                        <h3>AI Assisted Workflow</h3>
+                        <p>We combine human creativity with modern AI technology to produce design faster without compromising quality.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  // ── EVENT DELEGATION ──
-  document.getElementById('itemsBody').addEventListener('input', function(e) {
-    const el = e.target;
-    
-    if (el.tagName.toLowerCase() === 'textarea') {
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-    }
+        <!-- ============ FAQ ============ -->
+        <section class="faq-section fade-in">
+            <div class="container">
+                <div class="faq-grid">
+                    <div class="faq-intro">
+                        <span class="eyebrow"><span class="eyebrow-num">06</span> Questions</span>
+                        <h2>Got questions? We've got answers</h2>
+                        <p>Everything you need to know about how we work and what to expect.</p>
+                        <a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20discuss%20a%20design%20project" target="_blank" rel="noopener" class="btn btn-accent">Book a free consultation</a>
+                    </div>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <button class="faq-question">What services do you offer?<span class="faq-icon">+</span></button>
+                            <div class="faq-answer"><div class="faq-answer-inner">We provide Social Media Design, Branding Identity, Book Layout, AI Product Photo, E-Commerce Banner, Print Design, and a wide range of Custom Design requirements.</div></div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">How do I place an order?<span class="faq-icon">+</span></button>
+                            <div class="faq-answer"><div class="faq-answer-inner">Simply contact us via WhatsApp and describe your design requirements. We will then send you a quotation along with an estimated timeline.</div></div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">Can I request revisions?<span class="faq-icon">+</span></button>
+                            <div class="faq-answer"><div class="faq-answer-inner">Yes. Every project includes revisions according to the terms agreed upon before work begins.</div></div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">How long does a project take?<span class="faq-icon">+</span></button>
+                            <div class="faq-answer"><div class="faq-answer-inner">Turnaround time depends on the complexity of the project. A clear estimate is provided before work starts.</div></div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">Do you accept clients from other cities or countries?<span class="faq-icon">+</span></button>
+                            <div class="faq-answer"><div class="faq-answer-inner">Absolutely. The entire process runs online, so we work with clients across Indonesia and internationally.</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    const id    = el.dataset.id;
-    const field = el.dataset.field;
-    if (!id || !field) return;
+        <!-- ============ TESTIMONIALS ============ -->
+        <section class="testimonials on-dark fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">07</span> Collaborations</span>
+                <div class="section-head">
+                    <h2>Why they love working with us</h2>
+                    <p class="head-note">Hear from the clients who have trusted us with their design needs.</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <div class="testi-stars">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="testimonial-text">"The design work is highly professional and perfectly aligned with our business branding."</p>
+                        <div class="author-info-row">
+                            <img src="https://i.pravatar.cc/150?img=32" alt="Client photo">
+                            <div class="author-details"><h4>Client Name</h4><span>Business Name</span></div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testi-stars">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="testimonial-text">"Fast communication, straightforward revisions, and a final result we were very happy with."</p>
+                        <div class="author-info-row">
+                            <img src="https://i.pravatar.cc/150?img=11" alt="Client photo">
+                            <div class="author-details"><h4>Client Name</h4><span>Business Name</span></div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testi-stars">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <p class="testimonial-text">"We have worked with Swandika Studio several times now and have been satisfied every time."</p>
+                        <div class="author-info-row">
+                            <img src="https://i.pravatar.cc/150?img=5" alt="Client photo">
+                            <div class="author-details"><h4>Client Name</h4><span>Business Name</span></div>
+                        </div>
+                    </div>
+                </div>
 
-    const item = items.find(i => i.id === id);
-    if (!item) return;
+                <div class="testi-controls">
+                    <div class="testi-dots" id="testi-dots"></div>
+                    <div class="testi-arrows">
+                        <button class="testi-arrow" id="testi-prev" aria-label="Previous testimonial">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        </button>
+                        <button class="testi-arrow" id="testi-next" aria-label="Next testimonial">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    if (field === 'name')  item.name  = el.value;
-    if (field === 'desc')  item.desc  = el.value;
-    if (field === 'qty')   item.qty   = parseFloat(el.value) || 0;
-    if (field === 'price') item.price = parseFloat(el.value) || 0;
+        <!-- ============ FINAL CTA ============ -->
+        <section id="contact" class="cta-section fade-in">
+            <div class="container">
+                <span class="eyebrow"><span class="eyebrow-num">08</span> Get started</span>
+                <h2 class="cta-headline">Transform Your Ideas Today</h2>
+                <p>It's time to raise the visual standard of your business with Swandika Studio. Great design doesn't just look good, it builds customer trust and increases the value of your brand.</p>
+                <div class="cta-btn-group">
+                    <a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20discuss%20a%20design%20project" target="_blank" rel="noopener" class="btn btn-accent">Chat on WhatsApp</a>
+                    <a href="#portfolio" class="btn btn-ghost-dark">View Portfolio</a>
+                </div>
+            </div>
+        </section>
+    </main>
 
-    const subCell = document.querySelector(`[data-subtotal="${id}"]`);
-    if (subCell) subCell.textContent = fmt(item.qty * item.price);
+    <!-- ============ FOOTER ============ -->
+    <footer>
+        <div class="container">
+            <div class="footer-main">
+                <div class="footer-news">
+                    <h3>Stay updated with us</h3>
+                    <p>Occasional notes on design, branding, and what we're working on. No spam.</p>
+                    <form class="news-form" id="news-form">
+                        <input type="email" id="news-email" placeholder="Enter your email" aria-label="Email address" required>
+                        <button type="submit" class="btn btn-accent">Subscribe</button>
+                    </form>
+                    <div class="footer-social">
+                        <a href="https://instagram.com/USERNAME" target="_blank" rel="noopener" aria-label="Instagram" class="social-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="https://wa.me/62XXXXXXXXXX" target="_blank" rel="noopener" aria-label="WhatsApp" class="social-icon">
+                            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                        </a>
+                        <a href="https://www.behance.net/USERNAME" target="_blank" rel="noopener" aria-label="Behance" class="social-icon">
+                            <svg viewBox="0 0 24 24"><path d="M7.799 5.698c.589 0 1.12.051 1.606.156.482.102.894.273 1.241.507.344.235.612.546.804.938.187.387.281.871.281 1.443 0 .619-.141 1.137-.421 1.551-.284.41-.7.751-1.255 1.014.755.219 1.319.602 1.69 1.146.374.549.557 1.205.557 1.976 0 .623-.12 1.161-.359 1.612a3.023 3.023 0 01-.973 1.114 4.245 4.245 0 01-1.399.638c-.526.144-1.06.209-1.607.209H0V5.698h7.799zm-.351 4.972c.482 0 .879-.114 1.192-.345.309-.23.463-.604.463-1.119 0-.286-.051-.522-.152-.707a1.128 1.128 0 00-.408-.436 1.775 1.775 0 00-.59-.223 3.71 3.71 0 00-.692-.065H3.297v2.895h4.151zm.227 5.219c.293 0 .576-.03.848-.087.27-.056.508-.152.71-.283.205-.132.371-.309.494-.53.12-.219.18-.501.18-.844 0-.673-.19-1.153-.566-1.44-.377-.285-.876-.428-1.497-.428H3.297v3.612h4.378zM19.775 8.9c.594.293 1.09.7 1.485 1.219.396.514.673 1.11.83 1.786.157.674.201 1.379.126 2.115H15.36c0 .807.196 1.414.583 1.816.383.399.945.6 1.669.6.522 0 .972-.13 1.348-.395.375-.262.606-.541.688-.836h2.734c-.437 1.357-1.109 2.327-2.015 2.912-.906.586-2.001.878-3.284.878-.895 0-1.699-.144-2.418-.432a5.09 5.09 0 01-1.827-1.226 5.512 5.512 0 01-1.157-1.901 6.964 6.964 0 01-.404-2.424c0-.85.138-1.643.417-2.379a5.593 5.593 0 011.184-1.9 5.548 5.548 0 011.83-1.259c.712-.307 1.502-.461 2.375-.461.967 0 1.812.188 2.532.573zm-3.995 2.406c-.302.328-.492.771-.569 1.329h4.68c-.089-.582-.291-1.023-.605-1.322-.315-.301-.79-.451-1.427-.451-.417 0-.762.071-1.037.212-.276.142-.494.319-.657.53zM14.51 5.73h5.702v1.383H14.51V5.73z"/></svg>
+                        </a>
+                        <a href="mailto:EMAIL@DOMAIN.COM" aria-label="Email" class="social-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.236l-8 4.882-8-4.882V6h16v2.236zM4 18v-7.42l7.478 4.564a1 1 0 001.044 0L20 10.58V18H4z"/></svg>
+                        </a>
+                    </div>
+                </div>
 
-    calcTotals();
-  });
+                <ul class="footer-col">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#portfolio">Portfolio</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <ul class="footer-col">
+                    <li><a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20discuss%20a%20design%20project" target="_blank" rel="noopener">WhatsApp</a></li>
+                    <li><a href="mailto:EMAIL@DOMAIN.COM">Email</a></li>
+                    <li><a href="https://instagram.com/USERNAME" target="_blank" rel="noopener">Instagram</a></li>
+                    <li><a href="https://www.behance.net/USERNAME" target="_blank" rel="noopener">Behance</a></li>
+                </ul>
+            </div>
 
-  document.getElementById('itemsBody').addEventListener('click', function(e) {
-    const btn = e.target.closest('[data-del]');
-    if (!btn) return;
-    const id = btn.dataset.del;
-    items = items.filter(i => i.id !== id);
-    const row = document.querySelector(`tr[data-id="${id}"]`);
-    if (row) row.remove();
-    calcTotals();
-  });
+            <div class="wordmark-wrap"><div class="footer-wordmark">SWANDIKA STUDIO</div></div>
 
-  // ── CALC ──
-  function calcTotals() {
-    const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
-    const tax      = parseFloat(document.getElementById('taxAmount').value) || 0;
-    const disc     = parseFloat(document.getElementById('discPercent').value) || 0;
-    const discAmt  = subtotal * disc / 100;
-    const total    = subtotal + tax - discAmt;
+            <div class="footer-bottom">
+                <div>&copy; 2026 Swandika Studio. All Rights Reserved.</div>
+                <div class="footer-bottom-links">
+                    <a href="#home">Privacy Policy</a>
+                    <a href="#home">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    document.getElementById('prev-subtotal').textContent  = fmt(subtotal);
-    document.getElementById('prev-tax').textContent       = fmt(tax);
-    document.getElementById('prev-disc').textContent      = `-${fmt(discAmt)}`;
-    document.getElementById('prev-total').textContent     = fmt(total);
-    document.getElementById('prev-balanceDue').textContent= fmt(total);
-  }
+    <!-- ============ PROJECT MODAL ============ -->
+    <div class="modal-overlay" id="project-modal" data-lenis-prevent>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Close modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="modal-scroll-area">
+                <div class="modal-header-img"><img id="modal-img-main" alt="Project image"></div>
+                <div class="modal-info">
+                    <h2 id="modal-title">Project Title</h2>
+                    <p id="modal-desc"></p>
+                    <div class="modal-details-section">
+                        <h3>Project Breakdown</h3>
+                        <p id="modal-extended-desc"></p>
+                        <div class="modal-gallery" id="modal-gallery"></div>
+                    </div>
+                    <div style="margin-top: 44px; text-align: center;">
+                        <a href="https://wa.me/62XXXXXXXXXX?text=Hello%20Swandika%20Studio%2C%20I%27d%20like%20to%20start%20a%20similar%20project" target="_blank" rel="noopener" class="btn btn-accent" onclick="closeModal();">Start a Similar Project on WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  // ── UPDATE PREVIEW ──
-  function updatePreview() {
-    const name    = document.getElementById('clientName').value    || '—';
-    const contact = document.getElementById('clientContact').value || '—';
-    document.getElementById('prev-clientName').textContent    = name;
-    document.getElementById('prev-clientContact').textContent = contact;
+    <script>
+        /* ===== LENIS SMOOTH SCROLL ===== */
+        const lenis = new Lenis({
+            duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical', smooth: true, mouseMultiplier: 1, touchMultiplier: 2,
+        });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
 
-    updateFilenameHint();
-  }
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (targetId !== "#") { e.preventDefault(); lenis.scrollTo(targetId, { offset: -90, duration: 1.5 }); }
+            });
+        });
 
-  function updateFilenameHint() {
-    const invNum = document.getElementById('invoiceNum').value || 'INV-XXXXXXXX-XXXX';
-    const client = document.getElementById('clientName').value.trim().replace(/\s+/g,'_') || 'Client';
-    document.getElementById('filenameHint').textContent = `${invNum}_${client}.pdf`;
-  }
+        /* ===== BACK TO TOP ===== */
+        const backToTopBtn = document.getElementById('back-to-top');
+        lenis.on('scroll', (e) => {
+            if (e.animatedScroll > 600) backToTopBtn.classList.add('visible');
+            else backToTopBtn.classList.remove('visible');
+        });
+        backToTopBtn.addEventListener('click', () => lenis.scrollTo(0, { duration: 1.5 }));
 
-  // ── FORMAT ──
-  function fmt(n) {
-    return 'Rp ' + Math.round(n).toLocaleString('id-ID');
-  }
-  function esc(s) {
-    return String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/"/g,'&quot;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
-  }
+        /* ===== HEADER & MOBILE MENU ===== */
+        const header = document.getElementById('site-header');
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        let isMenuOpen = false;
 
-  // ── PDF GENERATOR ──
-  async function downloadPDF() {
-    const invNum   = document.getElementById('invoiceNum').value || 'INV';
-    const client   = document.getElementById('clientName').value.trim().replace(/\s+/g,'_') || 'Client';
-    const filename = `${invNum}_${client}.pdf`;
+        lenis.on('scroll', (e) => {
+            if (e.animatedScroll > 50) header.classList.add('scrolled');
+            else header.classList.remove('scrolled');
+        });
 
-    // 1. Tambahkan class .pdf-export ke body untuk mematikan semua CSS Media Query responsive
-    document.body.classList.add('pdf-export');
-
-    const el = document.getElementById('invoice-preview');
-    
-    // 2. Kunci lebar element preview ke ukuran resolusi desktop standar (750px) agar layout tidak menciut di HP
-    const originalWidth = el.style.width;
-    el.style.setProperty('width', '750px', 'important');
-
-    const noPrint = document.querySelectorAll('.no-print');
-    noPrint.forEach(el => el.style.setProperty('display','none','important'));
-
-    const logoImg = el.querySelector('.inv-logo-img');
-
-    // Matikan mix-blend-mode sementara saat generate PDF untuk mencegah gambar tembus
-    if (logoImg) logoImg.style.mixBlendMode = 'normal';
-
-    // Trik swap div statis untuk menangani bug text-clipping html2canvas
-    const inputs = el.querySelectorAll('.item-input');
-    inputs.forEach(input => {
-      const div = document.createElement('div');
-      div.className = input.className; 
-      div.style.whiteSpace = 'pre-wrap'; 
-      div.style.wordBreak = 'break-word';
-      div.textContent = input.value; 
-      div.setAttribute('data-pdf-temp', 'true');
-      
-      input.parentNode.insertBefore(div, input);
-      input.setAttribute('data-original-display', input.style.display);
-      input.style.setProperty('display', 'none', 'important');
-    });
-
-    await new Promise(r => requestAnimationFrame(r));
-
-    try {
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true, // WAJIB TRUE untuk render gambar url dummy
-        backgroundColor: '#ffffff',
-        logging: false
-      });
-
-      const imgData  = canvas.toDataURL('image/jpeg', 0.98);
-      const A4_W_MM  = 210;
-      const pdfH_MM  = (canvas.height / canvas.width) * A4_W_MM;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [A4_W_MM, pdfH_MM]
-      });
-
-      doc.addImage(imgData, 'JPEG', 0, 0, A4_W_MM, pdfH_MM);
-      doc.save(filename);
-    } catch(err) {
-      alert('Gagal export PDF: ' + err.message);
-    } finally {
-      // 3. Bersihkan & kembalikan state layout awal setelah render selesai
-      document.body.classList.remove('pdf-export');
-      el.style.width = originalWidth;
-
-      noPrint.forEach(el => el.style.removeProperty('display'));
-      if (logoImg) logoImg.style.mixBlendMode = 'multiply'; // Kembalikan efek setelah PDF dirender
-      
-      const tempDivs = el.querySelectorAll('div[data-pdf-temp="true"]');
-      tempDivs.forEach(div => {
-        const input = div.nextElementSibling;
-        if (input) {
-          input.style.display = input.getAttribute('data-original-display') || '';
+        function toggleMobileMenu() {
+            isMenuOpen = !isMenuOpen;
+            menuBtn.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            header.classList.toggle('menu-open', isMenuOpen);
+            if (isMenuOpen) lenis.stop(); else lenis.start();
         }
-        div.remove();
-      });
-    }
-  }
+        menuBtn.addEventListener('click', toggleMobileMenu);
 
-  // ── RESET ──
-  function resetInvoice() {
-    if (!confirm('Reset semua data invoice?')) return;
-    items = [];
-    document.getElementById('itemsBody').innerHTML = '';
-    document.getElementById('clientName').value   = '';
-    document.getElementById('clientContact').value= '';
-    document.getElementById('taxAmount').value    = '0';
-    document.getElementById('discPercent').value  = '0';
-    document.getElementById('invoiceNote').value   = '';
-    document.getElementById('invoiceNote').style.height = 'auto';
-    init(); // Panggil ulang init agar tanggal & ID kembali fresh
-    addItem(); 
-  }
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                if (isMenuOpen) toggleMobileMenu();
+                setTimeout(() => { if (targetId !== "#") lenis.scrollTo(targetId, { offset: -90, duration: 1.5 }); }, 100);
+            });
+        });
 
-  init();
-</script>
+        /* ===== PROJECT DATA ===== */
+        /* PLACEHOLDER: replace title, client, year, desc, img, and gallery with your real projects. */
+        const projectsData = [
+            {
+                id: 1, title: "Culinary Feed & Story Content", client: "Warung Nusantara", year: "2025", category: ["Social Media Design"],
+                desc: "A monthly social media content package with consistent feed and story templates that hold the brand's visual identity together.",
+                extendedDesc: "We built a template system the client's internal team could reuse easily: a clean feed grid, clear typographic hierarchy, and a warm color palette that lets the food photography lead. The result is faster content production without any loss of brand consistency.",
+                img: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1600132806608-231446b2e7af?auto=format&fit=crop&q=80&w=1200"
+                ]
+            },
+            {
+                id: 2, title: "Coffee Shop Brand Identity", client: "Kopi Senja", year: "2025", category: ["Branding Identity"],
+                desc: "A complete visual identity spanning logo, color palette, and typography through to packaging and stationery applications.",
+                extendedDesc: "The process began with positioning and brand character research, followed by logo exploration, brand guideline development, and application across cups, coffee bean packaging, signage, and uniforms. Every asset was delivered production-ready in both vector and print formats.",
+                img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200"
+                ]
+            },
+            {
+                id: 3, title: "Company Profile Layout", client: "PT Mitra Sejahtera", year: "2024", category: ["Book Layout"],
+                desc: "A 48-page company profile laid out with a clear information structure and prepared for print.",
+                extendedDesc: "We established master pages, a grid system, and a typographic style held consistent throughout the document. Company data was visualised through simple infographics for easier reading, with final files delivered in both a print version and an interactive digital version.",
+                img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1555421689-d68471e189f2?auto=format&fit=crop&q=80&w=1200"
+                ]
+            },
+            {
+                id: 4, title: "Skincare Product Visuals", client: "Glowlab", year: "2025", category: ["AI Product Photo"],
+                desc: "Photorealistic AI-generated product imagery for catalogue and campaign use, without the cost of a studio photo session.",
+                extendedDesc: "By combining real product references with AI processing, we produced visuals with consistent studio lighting across a range of backdrops and moods. The client received dozens of variations for marketplaces, advertising, and social media in a fraction of the usual time.",
+                img: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1529148482759-b35b25c5f217?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1561651823-34feb02250e4?auto=format&fit=crop&q=80&w=1200"
+                ]
+            },
+            {
+                id: 5, title: "Marketplace Campaign Banners", client: "Homey Living", year: "2025", category: ["E-Commerce Banner"],
+                desc: "A set of promotional banners for Shopee, Tokopedia, and TikTok Shop with clear, prominent offer messaging.",
+                extendedDesc: "Each banner was built to the size specifications of its platform, with particular attention to legibility on small screens. The offer hierarchy was kept deliberately strong so the discount and call to action register within the first few seconds.",
+                img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=1200"
+                ]
+            },
+            {
+                id: 6, title: "Restaurant Menu & Signage", client: "Dapur Rasa", year: "2024", category: ["Print Design"],
+                desc: "Menu book, X-banner, and interior signage design aligned with the atmosphere of the restaurant space.",
+                extendedDesc: "We matched materials and print dimensions to the room conditions and to the distance guests actually read from. The menu structure was arranged so signature items are easy to find, and all files were delivered print-ready with bleed and color profiles included.",
+                img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800",
+                gallery: [
+                    "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=1200",
+                    "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1200"
+                ]
+            }
+        ];
+
+        const projectsGrid = document.getElementById('projects-grid');
+        projectsData.forEach(project => {
+            const categories = Array.isArray(project.category) ? project.category : [project.category];
+            const categoryHTML = categories.map(cat => `<span class="project-category-pill">${cat}</span>`).join('');
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            card.innerHTML = `
+                <div class="project-image-wrapper hover-target" data-id="${project.id}">
+                    <img src="${project.img}" alt="${project.title}">
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">${project.title}</h3>
+                    <div class="project-meta">
+                        <span class="project-client">${project.client}</span>
+                        <div class="project-meta-right">
+                            <span class="project-year">${project.year}</span>
+                            <div class="project-categories">${categoryHTML}</div>
+                        </div>
+                    </div>
+                    <p class="project-desc">${project.desc}</p>
+                </div>
+            `;
+            projectsGrid.appendChild(card);
+        });
+
+        /* ===== IMAGE STRIP — buat 3 kloning baris (total 4) =====
+           Keyframe menggeser -25%, yaitu tepat selebar 1 baris, sehingga saat siklus
+           berulang posisinya identik dengan awal dan tidak terlihat melompat. */
+        const stripMarquee = document.getElementById('strip-marquee');
+        const stripRow = document.getElementById('strip-row');
+        for (let i = 0; i < 3; i++) {
+            const clone = stripRow.cloneNode(true);
+            clone.removeAttribute('id');
+            clone.setAttribute('aria-hidden', 'true');
+            clone.querySelectorAll('img').forEach(img => img.alt = '');
+            stripMarquee.appendChild(clone);
+        }
+
+        /* ===== SERVICES HOVER PREVIEW =====
+           Setiap baris punya satu <img> sendiri yang di-crossfade, sehingga
+           gambar tidak perlu dimuat ulang dan tidak berkedip saat berpindah. */
+        const serviceRows = [...document.querySelectorAll('#services-list .service-row')];
+        const previewImgBox = document.getElementById('preview-img');
+        const previewName = document.getElementById('preview-name');
+        const previewDesc = document.getElementById('preview-desc');
+        const previewText = document.getElementById('preview-text');
+
+        const serviceImgs = serviceRows.map(row => {
+            const img = document.createElement('img');
+            img.src = row.dataset.img;
+            img.alt = '';
+            previewImgBox.appendChild(img);
+            return img;
+        });
+
+        const servicePreview = document.getElementById('service-preview');
+        const servicesBody = document.querySelector('.services-body');
+        const servicesList = document.getElementById('services-list');
+        let activeService = -1;
+
+        /* Sejajarkan preview dengan baris yang di-hover, lalu jaga agar tidak keluar
+           dari tinggi daftar (baris pertama & terakhir akan menempel di batas). */
+        function positionPreview(row) {
+            const rowBox = row.getBoundingClientRect();
+            const bodyBox = servicesBody.getBoundingClientRect();
+            const listBox = servicesList.getBoundingClientRect();
+            const previewH = servicePreview.offsetHeight;
+            const rowCenter = (rowBox.top - bodyBox.top) + rowBox.height / 2;
+            const maxTop = Math.max(0, listBox.height - previewH);
+            const top = Math.min(Math.max(rowCenter - previewH / 2, 0), maxTop);
+            servicePreview.style.transform = `translateY(${top}px)`;
+        }
+
+        function showService(index) {
+            const row = serviceRows[index];
+            if (!row || index === activeService) return;
+
+            serviceRows.forEach(r => r.classList.remove('is-active'));
+            row.classList.add('is-active');
+            serviceImgs.forEach((img, i) => img.classList.toggle('is-shown', i === index));
+
+            const wasHidden = activeService === -1;
+            const applyText = () => {
+                previewName.textContent = row.querySelector('.service-name').firstChild.textContent.trim();
+                previewDesc.textContent = row.querySelector(':scope > p').textContent;
+                previewText.classList.remove('is-fading');
+                positionPreview(row);
+            };
+
+            if (wasHidden) {
+                applyText();
+                // posisikan dulu tanpa transisi agar tidak meluncur dari atas saat pertama muncul
+                servicePreview.style.transition = 'none';
+                positionPreview(row);
+                void servicePreview.offsetWidth;
+                servicePreview.style.transition = '';
+                servicePreview.classList.add('is-visible');
+            } else {
+                previewText.classList.add('is-fading');
+                positionPreview(row);
+                setTimeout(applyText, 160);
+            }
+            activeService = index;
+        }
+
+        function hideService() {
+            activeService = -1;
+            servicePreview.classList.remove('is-visible');
+            serviceRows.forEach(r => r.classList.remove('is-active'));
+            serviceImgs.forEach(img => img.classList.remove('is-shown'));
+        }
+
+        serviceRows.forEach((row, i) => {
+            row.addEventListener('mouseenter', () => showService(i));
+            row.addEventListener('focusin', () => showService(i));
+        });
+        servicesList.addEventListener('mouseleave', hideService);
+        servicesList.addEventListener('focusout', (e) => {
+            if (!servicesList.contains(e.relatedTarget)) hideService();
+        });
+
+        /* ===== SERVICES DROPDOWN (mobile) =====
+           Di layar sentuh tidak ada hover, jadi isi yang sama disajikan sebagai
+           accordion di dalam barisnya. Elemen selalu dibuat, tapi CSS hanya
+           menampilkannya pada breakpoint mobile. */
+        serviceRows.forEach(row => {
+            const drop = document.createElement('div');
+            drop.className = 'service-drop';
+            drop.innerHTML = `
+                <div class="service-drop-inner">
+                    <div class="service-drop-img"><img src="${row.dataset.img}" alt="" loading="lazy"></div>
+                    <p class="service-drop-desc">${row.querySelector(':scope > p').textContent}</p>
+                </div>`;
+            row.appendChild(drop);
+
+            row.addEventListener('click', () => {
+                const isOpen = row.classList.contains('is-open');
+                serviceRows.forEach(r => {
+                    r.classList.remove('is-open');
+                    r.querySelector('.service-drop').style.maxHeight = null;
+                });
+                if (!isOpen) {
+                    row.classList.add('is-open');
+                    drop.style.maxHeight = drop.scrollHeight + 'px';
+                }
+                setTimeout(() => lenis.resize(), 480);
+            });
+        });
+
+        /* ===== TESTIMONIALS CAROUSEL (mobile) ===== */
+        const testiTrack = document.querySelector('.testimonials-grid');
+        const testiCards = [...document.querySelectorAll('.testimonial-card')];
+        const dotsWrap = document.getElementById('testi-dots');
+        const prevBtn = document.getElementById('testi-prev');
+        const nextBtn = document.getElementById('testi-next');
+        let testiIndex = 0;
+
+        testiCards.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'testi-dot' + (i === 0 ? ' is-active' : '');
+            dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
+            dot.addEventListener('click', () => goToTesti(i));
+            dotsWrap.appendChild(dot);
+        });
+        const dots = [...dotsWrap.children];
+
+        function syncTesti(i) {
+            testiIndex = Math.max(0, Math.min(i, testiCards.length - 1));
+            dots.forEach((d, n) => d.classList.toggle('is-active', n === testiIndex));
+            prevBtn.disabled = testiIndex === 0;
+            nextBtn.disabled = testiIndex === testiCards.length - 1;
+        }
+        function goToTesti(i) {
+            syncTesti(i);
+            testiTrack.scrollTo({ left: testiCards[testiIndex].offsetLeft - testiTrack.offsetLeft, behavior: 'smooth' });
+        }
+        prevBtn.addEventListener('click', () => goToTesti(testiIndex - 1));
+        nextBtn.addEventListener('click', () => goToTesti(testiIndex + 1));
+
+        /* Geser manual (swipe) juga harus memperbarui dot & status tombol */
+        let testiScrollTimer;
+        testiTrack.addEventListener('scroll', () => {
+            clearTimeout(testiScrollTimer);
+            testiScrollTimer = setTimeout(() => {
+                const mid = testiTrack.scrollLeft + testiTrack.clientWidth / 2;
+                let nearest = 0, best = Infinity;
+                testiCards.forEach((card, i) => {
+                    const c = card.offsetLeft - testiTrack.offsetLeft + card.offsetWidth / 2;
+                    const d = Math.abs(c - mid);
+                    if (d < best) { best = d; nearest = i; }
+                });
+                syncTesti(nearest);
+            }, 90);
+        });
+        syncTesti(0);
+
+        /* ===== MODAL ===== */
+        const modalOverlay = document.getElementById('project-modal');
+        const modalClose = document.querySelector('.modal-close');
+        const modalImgMain = document.getElementById('modal-img-main');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalExtendedDesc = document.getElementById('modal-extended-desc');
+        const modalGallery = document.getElementById('modal-gallery');
+
+        function openModal(id) {
+            const project = projectsData.find(p => p.id == id);
+            if (project) {
+                modalImgMain.src = project.img;
+                modalTitle.textContent = project.title;
+                modalDesc.textContent = project.desc;
+                modalExtendedDesc.textContent = project.extendedDesc;
+                modalGallery.innerHTML = '';
+                project.gallery.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    modalGallery.appendChild(img);
+                });
+                modalOverlay.classList.add('active');
+                lenis.stop();
+            }
+        }
+        function closeModal() { modalOverlay.classList.remove('active'); lenis.start(); }
+
+        document.querySelectorAll('.project-image-wrapper').forEach(w => {
+            w.addEventListener('click', () => openModal(w.getAttribute('data-id')));
+        });
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
+
+        /* ===== CUSTOM CURSOR ===== */
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            if (e.target.closest('.hover-target')) cursor.classList.add('active');
+            else cursor.classList.remove('active');
+        });
+
+        /* ===== MARQUEE LOGOS ===== */
+        const marqueeContainer = document.getElementById('marquee-container');
+        const dummyLogos = [
+            "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+            "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
+            "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg",
+            "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
+            "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+        ];
+        function createTrack() {
+            const track = document.createElement('div');
+            track.className = 'marquee-track';
+            dummyLogos.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src; img.className = 'marquee-logo'; img.alt = 'Client logo';
+                track.appendChild(img);
+            });
+            return track;
+        }
+        for (let i = 0; i < 6; i++) marqueeContainer.appendChild(createTrack());
+
+        /* ===== FADE IN ON SCROLL ===== */
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) { entry.target.classList.add('visible'); fadeObserver.unobserve(entry.target); }
+            });
+        }, { threshold: 0.08, rootMargin: "0px 0px -50px 0px" });
+        document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+        /* ===== NUMBER COUNTER ===== */
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = +counter.getAttribute('data-target');
+                    const update = () => {
+                        const count = +counter.innerText;
+                        const inc = target / 200;
+                        if (count < target) { counter.innerText = Math.ceil(count + inc); setTimeout(update, 10); }
+                        else counter.innerText = target;
+                    };
+                    update();
+                    counterObserver.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('.counter').forEach(c => counterObserver.observe(c));
+
+        /* ===== FAQ ACCORDION ===== */
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            const answer = item.querySelector('.faq-answer');
+            question.addEventListener('click', () => {
+                const isActive = item.classList.contains('active');
+                faqItems.forEach(other => {
+                    other.classList.remove('active');
+                    other.querySelector('.faq-answer').style.maxHeight = null;
+                });
+                if (!isActive) {
+                    item.classList.add('active');
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                }
+                setTimeout(() => lenis.resize(), 320);
+            });
+        });
+
+        /* ===== NEWSLETTER (placeholder — belum terhubung backend) ===== */
+        document.getElementById('news-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const original = btn.textContent;
+            btn.textContent = 'Not connected yet';
+            setTimeout(() => { btn.textContent = original; }, 2200);
+        });
+    </script>
 </body>
 </html>
